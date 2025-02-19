@@ -41,11 +41,17 @@ TRANSLIT_DICT = {
 }
 
 VOWEL_TO_NUMBER = {
-    'а': '1', 'е': '2', 'ё': '3', 'и': '4', 'о': '5', 'у': '6', 'ы': '7', 'э': '8', 'ю': '9', 'я': '0',
-    'А': '1', 'Е': '2', 'Ё': '3', 'И': '4', 'О': '5', 'У': '6', 'Ы': '7', 'Э': '8', 'Ю': '9', 'Я': '0'
+    'а': '2', 'А': '2',
+    'о': '0', 'О': '0',
+    'у': '7', 'У': '7',
+    'ы': 'bl', 'Ы': 'bl',
+    'э': '9', 'Э': '9',
+    'ю': '8', 'Ю': '8',
+    'я': '5', 'Я': '5',
+    'и': '1', 'И': '1',
+    'е': '3', 'Е': '3',
+    'ё': '3', 'Ё': '3',
 }
-
-NUMBER_TO_VOWEL = {v: k for k, v in VOWEL_TO_NUMBER.items()}  # Словарь для дешифрования
 
 @loader.tds
 class ShifratorMod(loader.Module):
@@ -53,33 +59,20 @@ class ShifratorMod(loader.Module):
         "name": "Shifrator",
         "usage": (
             "✍️ Напишите команду .shifr <текст>, чтобы зашифровать текст.\n"
-            "📝 Пример: .shifr Привет, мир!\n"
-            "🔓 Напишите команду .deshifr <текст>, чтобы расшифровать текст."
+            "📝 Пример: .shifr Привет, мир!"
         ),
     }
 
     @loader.command(ru_doc="Зашифровать текст")
     async def shifrcmd(self, message: Message):
-        """Команда для шифрования текста"""
         args = utils.get_args_raw(message)
         if not args:
             await utils.answer(message, self.strings("usage"))
             return
         encrypted_text = self.encrypt_text(args)
-        await utils.answer(message, encrypted_text) 
-
-    @loader.command(ru_doc="Расшифровать текст")
-    async def deshifrcmd(self, message: Message):
-        """Команда для расшифрования текста"""
-        args = utils.get_args_raw(message)
-        if not args:
-            await utils.answer(message, self.strings("usage"))
-            return
-        decrypted_text = self.decrypt_text(args)
-        await utils.answer(message, decrypted_text)  # Просто возвращаем расшифрованный текст
+        await utils.answer(message, encrypted_text)
 
     def encrypt_text(self, text: str) -> str:
-        """Шифрует текст: транслитерация + замена гласных на цифры"""
         result = []
         for char in text:
             if char in VOWEL_TO_NUMBER:
@@ -87,16 +80,5 @@ class ShifratorMod(loader.Module):
             elif char in TRANSLIT_DICT:
                 result.append(TRANSLIT_DICT[char])
             else:
-                result.append(char)
-        return ''.join(result)
-
-    def decrypt_text(self, text: str) -> str:
-        """Расшифровывает текст: замена цифр на гласные + обратная транслитерация"""
-        result = []
-        for char in text:
-            if char in NUMBER_TO_VOWEL:
-                result.append(NUMBER_TO_VOWEL[char])
-            else:
-              
                 result.append(char)
         return ''.join(result)
