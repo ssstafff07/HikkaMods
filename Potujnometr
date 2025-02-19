@@ -41,15 +41,6 @@ class Potujnometr(loader.Module):
             "ПРИБЕРЕЖІТЬ СВОЄ ЗДОРОВʼЯ І СВІЙ ПОТУЖНОМЕТР."
         ),
     }
-    strings_ru = {
-        "power_level": (
-            "Уровень мощности:\n\n"
-            "⬜️🟩🟨🟧🟫🟦🟪⬛️☠️\n"
-            "{}🔺\n\n"
-            "УРОВЕНЬ МОЩНОСТИ ДОСТИГ ВСЕГАЛАКТИЧЕСКОГО ВЫСОКОГО УРОВНЯ.\n\n"
-            "БЕРЕГИТЕ СВОЁ ЗДОРОВЬЕ И СВОЙ МОЩНОМЕР."
-        ),
-    }
 
     @loader.command(ru_doc="Показати рівень потужності")
     async def ptjcmd(self, message: Message):
