@@ -26,6 +26,7 @@
 import datetime
 from hikkatl.tl.types import Message
 from hikkatl.tl.functions.messages import GetHistoryRequest
+from hikkatl.tl.functions.users import GetFullUserRequest
 from .. import loader, utils
 
 @loader.tds
@@ -82,12 +83,15 @@ class LogDonModule(loader.Module):
         log_content = ""
         for msg in reversed(all_messages):
             user_id = msg.sender_id
-            sender = msg.sender
-            nickname = ""
-            if sender:
-                first_name = sender.first_name or ""
-                last_name = sender.last_name or ""
+            try:
+                # Получаем полную информацию о пользователе
+                user = await message.client(GetFullUserRequest(user_id))
+                first_name = user.user.first_name or ""
+                last_name = user.user.last_name or ""
                 nickname = f"{first_name} {last_name}".strip()
+            except Exception:
+                nickname = ""
+
             date = msg.date.strftime("%d %b. %Y в %H:%M")
             text = msg.raw_text
             log_content += f"User id: {user_id}, nickname: {nickname}, [{date}]\n{text}\n\n"
