@@ -24,42 +24,21 @@
 #⠄⠄⣿⣿⣿⣿⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⣿⣿⣿⣿⣿⣿⣿⣿
 
 import datetime
-import os
 from hikkatl.tl.types import Message
-from hikkatl.tl.functions.messages import GetHistoryRequest, CreateChatRequest
-from hikkatl.tl.functions.channels import CreateChannelRequest
-from hikkatl.tl.functions.contacts import ResolveUsernameRequest
+from hikkatl.tl.functions.messages import GetHistoryRequest
 from .. import loader, utils
 
 @loader.tds
 class LogDonModule(loader.Module):
     strings = {
         "name": "LogDon",
-        "saved": "🗒 Сообщения сохранены в файл и отправлены в группу.",
+        "saved": "🗒 Сообщения сохранены в файл и отправлены в избранные.",
         "no_messages": "🚫 Нет сообщений для сохранения.",
-        "group_created": "✅ Группа для логов создана: {}",
-        "group_exists": "✅ Группа для логов уже существует: {}",
     }
 
     async def client_ready(self, client, db):
         self.client = client
         self.db = db
-        self.group_title = "LogDon Group"
-
-    async def _ensure_group_exists(self):
-        """Создает группу для логов, если она не существует."""
-        try:
-            # Пытаемся найти группу по названию
-            resolved = await self.client(ResolveUsernameRequest(self.group_title))
-            return resolved.chats[0]
-        except Exception:
-            # Если группа не найдена, создаем новую
-            created = await self.client(CreateChannelRequest(
-                title=self.group_title,
-                about="Группа для хранения логов сообщений",
-                megagroup=True,
-            ))
-            return created.chats[0]
 
     @loader.command(ru_doc="<число> - Сохранить указанное количество сообщений в файл")
     async def ldcmd(self, message: Message):
@@ -72,9 +51,6 @@ class LogDonModule(loader.Module):
         if limit <= 0:
             await utils.answer(message, "🚫 Число сообщений должно быть больше 0.")
             return
-
-        # Проверяем наличие группы и создаем, если ее нет
-        group = await self._ensure_group_exists()
 
         chat = await message.get_chat()
         all_messages = []
@@ -115,13 +91,12 @@ class LogDonModule(loader.Module):
             log_content += f"User id: tg://user?id={user_id}, [{date}]\n{text}\n\n"
 
         filename = f"logdon_{chat.id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        file_path = os.path.join(os.getcwd(), filename)
-        with open(file_path, "w", encoding="utf-8") as file:
+        with open(filename, "w", encoding="utf-8") as file:
             file.write(log_content)
 
-        # Отправляем файл в группу
-        await self.client.send_file(group, file_path, caption=self.strings("saved"))
+        # Отправляем файл в избранные
+        await self.client.send_file("me", filename, caption=self.strings("saved"))
         await utils.answer(message, self.strings("saved"))
 
         # Удаляем временный файл
-        os.remove(file_path)
+        os.remove(filename)
