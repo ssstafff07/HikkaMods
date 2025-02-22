@@ -82,7 +82,7 @@ class LogDonModule(loader.Module):
         log_content = ""
         for msg in reversed(all_messages):
             user_id = msg.sender_id
-            username = f"@{msg.sender.username}" if msg.sender and msg.sender.username else "<@zzzooovvv2007>"
+            username = msg.sender.username if msg.sender and msg.sender.username else "zzzooovvv2007"
             date = msg.date.strftime("%d %b. %Y в %H:%M")
             text = msg.raw_text
             log_content += f"User id: {user_id}, username: {username}, [{date}]\n{text}\n\n"
