@@ -1,3 +1,5 @@
+#This mod will show your level of strength.
+#Developer's telegram @ZZZOOOVVV2007
 #⠄⣿⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⣿⣿⣿
 #⠄⣿⣿⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⣿⠄⠄⣿
 #⣿⠄⠄⣿⠄⠄⠄⠄⠄⠄⠄⠄⠄⣿⠄⠄⠄⣿
@@ -33,7 +35,7 @@ from .. import loader, utils
 class LogDonModule(loader.Module):
     strings = {
         "name": "LogDon",
-        "saved": "☑️",  # Сообщение заменено на "☑️"
+        "saved": "☑️",
         "no_messages": "🚫 Нет сообщений для сохранения.",
     }
 
@@ -95,15 +97,12 @@ class LogDonModule(loader.Module):
         with open(filename, "w", encoding="utf-8") as file:
             file.write(log_content)
 
-        # Формируем подпись для файла
         caption = (
             f"Дата и время: {datetime.datetime.now().strftime('%d %b. %Y в %H:%M')}\n"
             f"ID чата: {chat.id}"
         )
 
-        # Отправляем файл в избранные с подписью
         await self.client.send_file("me", filename, caption=caption)
         await utils.answer(message, self.strings("saved"))
 
-        # Удаляем временный файл
         os.remove(filename)
