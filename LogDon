@@ -102,5 +102,5 @@ class LogDonModule(loader.Module):
         os.remove(filename)
 
         # Удаляем сообщение об отправке лога
-        await self.client(DeleteMessagesRequest(peer="me", id=[sent_message.id]))
+        await self.client(DeleteMessagesRequest(id=[sent_message.id], revoke=True))
         await utils.answer(message, self.strings("saved"))
