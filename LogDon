@@ -24,9 +24,9 @@
 #⠄⠄⣿⣿⣿⣿⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⣿⣿⣿⣿⣿⣿⣿⣿
 
 import datetime
-import os  # Добавлен импорт модуля os
+import os
 from hikkatl.tl.types import Message
-from hikkatl.tl.functions.messages import GetHistoryRequest
+from hikkatl.tl.functions.messages import GetHistoryRequest, DeleteMessagesRequest
 from .. import loader, utils
 
 @loader.tds
@@ -96,8 +96,11 @@ class LogDonModule(loader.Module):
             file.write(log_content)
 
         # Отправляем файл в избранные
-        await self.client.send_file("me", filename, caption=self.strings("saved"))
-        await utils.answer(message, self.strings("saved"))
+        sent_message = await self.client.send_file("me", filename, caption=self.strings("saved"))
 
         # Удаляем временный файл
         os.remove(filename)
+
+        # Удаляем сообщение об отправке лога
+        await self.client(DeleteMessagesRequest(peer="me", id=[sent_message.id]))
+        await utils.answer(message, self.strings("saved"))
