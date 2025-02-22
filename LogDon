@@ -84,7 +84,7 @@ class LogDonModule(loader.Module):
             user_id = msg.sender_id
             date = msg.date.strftime("%d %b. %Y в %H:%M")
             text = msg.raw_text
-            log_content += f"User id: {user_id}, [{date}]\n{text}\n\n"
+            log_content += f"User id: tg://user?id={user_id}, [{date}]\n{text}\n\n"
 
         filename = f"logdon_{chat.id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
         with open(filename, "w", encoding="utf-8") as file:
