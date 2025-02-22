@@ -26,14 +26,14 @@
 import datetime
 import os
 from hikkatl.tl.types import Message
-from hikkatl.tl.functions.messages import GetHistoryRequest, DeleteMessagesRequest
+from hikkatl.tl.functions.messages import GetHistoryRequest
 from .. import loader, utils
 
 @loader.tds
 class LogDonModule(loader.Module):
     strings = {
         "name": "LogDon",
-        "saved": "🗒 Сообщения сохранены в файл и отправлены в избранные.",
+        "saved": "☑️",  # Сообщение заменено на "☑️"
         "no_messages": "🚫 Нет сообщений для сохранения.",
     }
 
@@ -96,11 +96,8 @@ class LogDonModule(loader.Module):
             file.write(log_content)
 
         # Отправляем файл в избранные
-        sent_message = await self.client.send_file("me", filename, caption=self.strings("saved"))
+        await self.client.send_file("me", filename, caption=self.strings("saved"))
+        await utils.answer(message, self.strings("saved"))
 
         # Удаляем временный файл
         os.remove(filename)
-
-        # Удаляем сообщение об отправке лога
-        await self.client(DeleteMessagesRequest(id=[sent_message.id], revoke=True))
-        await utils.answer(message, self.strings("saved"))
