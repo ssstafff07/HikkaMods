@@ -82,10 +82,9 @@ class LogDonModule(loader.Module):
         log_content = ""
         for msg in reversed(all_messages):
             user_id = msg.sender_id
-            username = f"@{msg.sender.username}" if msg.sender and msg.sender.username else ""
             date = msg.date.strftime("%d %b. %Y в %H:%M")
             text = msg.raw_text
-            log_content += f"User id: {user_id}, username: {username}, [{date}]\n{text}\n\n"
+            log_content += f"User id: {user_id}, [{date}]\n{text}\n\n"
 
         filename = f"logdon_{chat.id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
         with open(filename, "w", encoding="utf-8") as file:
