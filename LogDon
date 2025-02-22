@@ -24,42 +24,35 @@
 #⠄⠄⣿⣿⣿⣿⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⣿⣿⣿⣿⣿⣿⣿⣿
 
 import datetime
+import os
 from hikkatl.tl.types import Message
-from hikkatl.tl.functions.messages import GetHistoryRequest, CreateChatRequest
-from hikkatl.tl.functions.channels import CreateChannelRequest
-from hikkatl.tl.functions.contacts import ResolveUsernameRequest
+from hikkatl.tl.functions.messages import GetHistoryRequest
 from .. import loader, utils
 
 @loader.tds
 class LogDonModule(loader.Module):
     strings = {
         "name": "LogDon",
-        "saved": "🗒 Сообщения сохранены в файл и отправлены в группу.",
+        "saved": "🗒 Сообщения сохранены в файл и отправлены в папку.",
         "no_messages": "🚫 Нет сообщений для сохранения.",
-        "group_created": "✅ Группа для логов создана: {}",
-        "group_exists": "✅ Группа для логов уже существует: {}",
+        "folder_created": "✅ Папка для логов создана: {}",
+        "folder_exists": "✅ Папка для логов уже существует: {}",
     }
 
     async def client_ready(self, client, db):
         self.client = client
         self.db = db
-        self.group_title = "LogDon Group"
-        self.group = await self._ensure_group_exists()
+        self.folder_name = "LogDon Group"
+        self.folder_path = os.path.join(os.getcwd(), self.folder_name)
+        await self._ensure_folder_exists()
 
-    async def _ensure_group_exists(self):
-        """Создает группу для логов, если она не существует."""
-        try:
-            # Пытаемся найти группу по названию
-            resolved = await self.client(ResolveUsernameRequest(self.group_title))
-            return resolved.chats[0]
-        except Exception:
-            # Если группа не найдена, создаем новую
-            created = await self.client(CreateChannelRequest(
-                title=self.group_title,
-                about="Группа для хранения логов сообщений",
-                megagroup=True,
-            ))
-            return created.chats[0]
+    async def _ensure_folder_exists(self):
+        """Создает папку для логов, если она не существует."""
+        if not os.path.exists(self.folder_path):
+            os.makedirs(self.folder_path)
+            await self.client.send_message("me", self.strings("folder_created").format(self.folder_path))
+        else:
+            await self.client.send_message("me", self.strings("folder_exists").format(self.folder_path))
 
     @loader.command(ru_doc="<число> - Сохранить указанное количество сообщений в файл")
     async def ldcmd(self, message: Message):
@@ -112,9 +105,8 @@ class LogDonModule(loader.Module):
             log_content += f"User id: tg://user?id={user_id}, [{date}]\n{text}\n\n"
 
         filename = f"logdon_{chat.id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        with open(filename, "w", encoding="utf-8") as file:
+        file_path = os.path.join(self.folder_path, filename)
+        with open(file_path, "w", encoding="utf-8") as file:
             file.write(log_content)
 
-        # Отправляем файл в группу
-        await self.client.send_file(self.group, filename, caption=self.strings("saved"))
         await utils.answer(message, self.strings("saved"))
