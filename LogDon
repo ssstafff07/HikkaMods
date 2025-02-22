@@ -31,6 +31,11 @@ from hikkatl.tl.types import Message
 from hikkatl.tl.functions.messages import GetHistoryRequest
 from .. import loader, utils
 
+def progress_bar(progress, total, length=20):
+    filled_length = int(length * progress // total)
+    bar = '█' * filled_length + '░' * (length - filled_length)
+    return f"[{bar}] {progress}/{total}"
+
 @loader.tds
 class LogDonModule(loader.Module):
     strings = {
@@ -77,6 +82,10 @@ class LogDonModule(loader.Module):
 
             all_messages.extend(history.messages)
             total_count += len(history.messages)
+
+            progress = progress_bar(total_count, limit)
+            await utils.answer(message, f"Сбор сообщений...\n{progress}")
+
             if total_count >= limit:
                 break
 
