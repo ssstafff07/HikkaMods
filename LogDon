@@ -24,6 +24,7 @@
 #⠄⠄⣿⣿⣿⣿⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⣿⣿⣿⣿⣿⣿⣿⣿
 
 import datetime
+import os  # Добавлен импорт модуля os
 from hikkatl.tl.types import Message
 from hikkatl.tl.functions.messages import GetHistoryRequest
 from .. import loader, utils
