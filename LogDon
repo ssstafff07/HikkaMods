@@ -95,8 +95,14 @@ class LogDonModule(loader.Module):
         with open(filename, "w", encoding="utf-8") as file:
             file.write(log_content)
 
-        # Отправляем файл в избранные
-        await self.client.send_file("me", filename, caption=self.strings("saved"))
+        # Формируем подпись для файла
+        caption = (
+            f"Дата и время: {datetime.datetime.now().strftime('%d %b. %Y в %H:%M')}\n"
+            f"ID чата: {chat.id}"
+        )
+
+        # Отправляем файл в избранные с подписью
+        await self.client.send_file("me", filename, caption=caption)
         await utils.answer(message, self.strings("saved"))
 
         # Удаляем временный файл
