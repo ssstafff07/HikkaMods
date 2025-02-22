@@ -34,12 +34,18 @@ import zipfile
 import shutil
 import sqlite3
 import xml.etree.ElementTree as ET
-import yaml
 from fpdf import FPDF
 import openpyxl
 from hikkatl.tl.types import Message
 from hikkatl.tl.functions.messages import GetHistoryRequest
 from .. import loader, utils
+
+# Проверка наличия библиотеки yaml
+try:
+    import yaml
+    YAML_AVAILABLE = True
+except ImportError:
+    YAML_AVAILABLE = False
 
 logging.basicConfig(
     filename="logdon_actions.log",
@@ -64,6 +70,7 @@ class LogDonModule(loader.Module):
         "sqlite_export": "📁 Лог сохранен в формате SQLite.",
         "xml_export": "📁 Лог сохранен в формате XML.",
         "yaml_export": "📁 Лог сохранен в формате YAML.",
+        "yaml_not_available": "🚫 Библиотека PyYAML не установлена. Установите её командой: pip install pyyaml",
         "zip_created": "📦 Логи архивированы в ZIP-файл.",
         "cleaned": "🧹 Удалены старые логи (старше 7 дней).",
         "completed": "✅ Задача завершена. Сохранено {count} сообщений.",
@@ -232,6 +239,10 @@ class LogDonModule(loader.Module):
             return False
 
     async def _export_to_yaml(self, messages, filename):
+        if not YAML_AVAILABLE:
+            await utils.answer(message, self.strings("yaml_not_available"))
+            return False
+
         try:
             log_data = [{"user_id": msg.sender_id, "date": msg.date.strftime('%d %b. %Y в %H:%M'), "message": msg.raw_text} for msg in messages]
             with open(filename, "w", encoding="utf-8") as file:
