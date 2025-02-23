@@ -59,14 +59,12 @@ class VideoLoader(loader.Module):
     async def download_tiktok_video(self, message, url):
         try:
             api = TikTokApi()
-            video_data = api.get_video_by_url(url)
-            if not video_data:
-                await message.edit("❌ Не удалось получить видео с TikTok.")
-                return
+            video_info = api.video(url=url).info()
+            video_url = video_info["video"]["downloadAddr"]
 
             output_path = os.path.join("downloads", f"tiktok_video_{random.randint(1, 1000)}.mp4")
             with open(output_path, "wb") as f:
-                f.write(video_data)
+                f.write(api.get_bytes(video_url))
 
             await message.edit(self.strings["tiktok_downloaded"].format(output_path))
         except Exception as e:
