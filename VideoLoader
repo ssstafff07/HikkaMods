@@ -1,0 +1,74 @@
+import os
+import random
+from .. import loader, utils
+from pytube import YouTube
+from TikTokApi import TikTokApi
+
+@loader.tds
+class VideoLoader(loader.Module):
+    strings = {
+        "name": "VideoLoader",
+        "youtube_downloaded": "🎥 Видео с YouTube успешно скачано: {}",
+        "tiktok_downloaded": "🎥 Видео с TikTok успешно скачано: {}",
+        "error": "❌ Произошла ошибка при скачивании видео.",
+        "invalid_url": "❌ Некорректная ссылка. Пожалуйста, укажите ссылку на видео с YouTube или TikTok.",
+        "no_url": "❌ Укажите ссылку на видео."
+    }
+
+    def __init__(self):
+        self.name = self.strings["name"]
+
+    @loader.command(ru_doc="Скачать видео с YouTube")
+    async def ydcmd(self, message):
+        args = utils.get_args_raw(message)
+        if not args:
+            await message.edit(self.strings["no_url"])
+            return
+
+        if "youtube.com" in args or "youtu.be" in args:
+            await self.download_youtube_video(message, args)
+        else:
+            await message.edit(self.strings["invalid_url"])
+
+    @loader.command(ru_doc="Скачать видео с TikTok")
+    async def tdcmd(self, message):
+        args = utils.get_args_raw(message)
+        if not args:
+            await message.edit(self.strings["no_url"])
+            return
+
+        if "tiktok.com" in args:
+            await self.download_tiktok_video(message, args)
+        else:
+            await message.edit(self.strings["invalid_url"])
+
+    async def download_youtube_video(self, message, url):
+        try:
+            yt = YouTube(url)
+            video = yt.streams.filter(progressive=True, file_extension='mp4').first()
+            if not video:
+                await message.edit("❌ Не удалось найти подходящий поток для скачивания.")
+                return
+
+            output_path = video.download(output_path="downloads")
+            await message.edit(self.strings["youtube_downloaded"].format(output_path))
+        except Exception as e:
+            await message.edit(self.strings["error"])
+            print(f"Ошибка при скачивании видео с YouTube: {e}")
+
+    async def download_tiktok_video(self, message, url):
+        try:
+            api = TikTokApi()
+            video_data = api.get_video_by_url(url)
+            if not video_data:
+                await message.edit("❌ Не удалось получить видео с TikTok.")
+                return
+
+            output_path = os.path.join("downloads", f"tiktok_video_{random.randint(1, 1000)}.mp4")
+            with open(output_path, "wb") as f:
+                f.write(video_data)
+
+            await message.edit(self.strings["tiktok_downloaded"].format(output_path))
+        except Exception as e:
+            await message.edit(self.strings["error"])
+            print(f"Ошибка при скачивании видео с TikTok: {e}")
