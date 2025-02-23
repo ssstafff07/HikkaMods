@@ -31,9 +31,9 @@ import string
 from .. import loader, utils
 
 @loader.tds
-class SimpleCipherModule(loader.Module):
+class ShifraXOR(loader.Module):
     strings = {
-        "name": "SimpleCipher",
+        "name": "ShifraXOR",
         "no_key": "🚫 Ключ шифрования не найден. Пожалуйста, перезагрузите модуль.",
         "key_generated": "🔑 Ключ шифрования сгенерирован.",
     }
@@ -44,11 +44,11 @@ class SimpleCipherModule(loader.Module):
     async def client_ready(self, client, db):
         self.client = client
         self.db = db
-        self.key = self.db.get("SimpleCipher", "key", None)
+        self.key = self.db.get("ShifraXOR", "key", None)
 
         if not self.key:
             self.key = self.generate_key()
-            self.db.set("SimpleCipher", "key", self.key)
+            self.db.set("ShifraXOR", "key", self.key)
             await self.client.send_message("me", self.strings("key_generated"))
 
     def generate_key(self):
