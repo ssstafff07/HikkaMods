@@ -20,6 +20,7 @@ class VideoLoader(loader.Module):
 
     @loader.command(ru_doc="Скачать видео с YouTube")
     async def ydcmd(self, message):
+        """Команда для скачивания видео с YouTube."""
         args = utils.get_args_raw(message)
         if not args:
             await message.edit(self.strings["no_url"])
@@ -32,6 +33,7 @@ class VideoLoader(loader.Module):
 
     @loader.command(ru_doc="Скачать видео с TikTok")
     async def tdcmd(self, message):
+        """Команда для скачивания видео с TikTok."""
         args = utils.get_args_raw(message)
         if not args:
             await message.edit(self.strings["no_url"])
@@ -59,12 +61,14 @@ class VideoLoader(loader.Module):
     async def download_tiktok_video(self, message, url):
         try:
             api = TikTokApi()
-            video_info = api.video(url=url).info()
-            video_url = video_info["video"]["downloadAddr"]
+            video_info = api.get_video_by_url(url)
+            if not video_info:
+                await message.edit("❌ Не удалось получить видео с TikTok.")
+                return
 
             output_path = os.path.join("downloads", f"tiktok_video_{random.randint(1, 1000)}.mp4")
             with open(output_path, "wb") as f:
-                f.write(api.get_bytes(video_url))
+                f.write(video_info)
 
             await message.edit(self.strings["tiktok_downloaded"].format(output_path))
         except Exception as e:
