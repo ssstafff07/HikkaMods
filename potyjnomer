@@ -34,11 +34,22 @@ class PotyjNomer(loader.Module):
         "name": "PotyjNomer",
         "power_level": (
             "Рівень потужності:\n\n"
-            "⬜️🟩🟨🟧🟫🟦🟪⬛️☠️\n"
+            "{color}\n"
             "{dots}🔺\n\n"
-            "РІВЕНЬ ПОТУЖНОСТІ ДОЙШОВ ДО ВСЕГАЛАКТИЧНОГО ВИСОКОГО РІВНЯ.\n\n"
+            "{message}\n\n"
             "ПРИБЕРЕЖІТЬ СВОЄ ЗДОРОВʼЯ І СВІЙ ПОТУЖНОМЕТР."
-        )
+        ),
+        "messages": {
+            "⬜️": "БІЛИЙ КУБІК: РІВЕНЬ ПОТУЖНОСТІ НА МІНІМУМІ. ВИ МОЖЕТЕ СПОКІЙНО РОЗСЛАБИТИСЯ.",
+            "🟩": "ЗЕЛЕНИЙ КУБІК: РІВЕНЬ ПОТУЖНОСТІ СЕРЕДНІЙ. ВИ МОЖЕТЕ ПРОДОВЖУВАТИ РОБОТУ.",
+            "🟨": "ЖОВТИЙ КУБІК: РІВЕНЬ ПОТУЖНОСТІ ТРОХИ ПІДВИЩЕНИЙ. БУДЬТЕ УВАЖНИМИ.",
+            "🟧": "ОРАНЖЕВИЙ КУБІК: РІВЕНЬ ПОТУЖНОСТІ ВИСОКИЙ. ПРИЙМІТЬ ЗАХОДИ ДЛЯ ЗНИЖЕННЯ СТРЕСУ.",
+            "🟫": "КОРИЧНЕВИЙ КУБІК: РІВЕНЬ ПОТУЖНОСТІ ДУЖЕ ВИСОКИЙ. ВАМ ПОТРІБЕН ВІДПОЧИНОК.",
+            "🟦": "СИНІЙ КУБІК: РІВЕНЬ ПОТУЖНОСТІ КРИТИЧНИЙ. НЕГАЙНО ЗУПИНІТЬСЯ І ЗАЙМІТЬСЯ СОБОЮ.",
+            "🟪": "ФІОЛЕТОВИЙ КУБІК: РІВЕНЬ ПОТУЖНОСТІ ЗАМЕЖНИЙ. ВАМ ПОТРІБНА ДОПОМОГА.",
+            "⬛️": "ЧОРНИЙ КУБІК: РІВЕНЬ ПОТУЖНОСТІ НЕВІДОМИЙ. ЩОСЬ ПІШЛО НЕ ТАК.",
+            "☠️": "ЧЕРЕП: РІВЕНЬ ПОТУЖНОСТІ ДОЙШОВ ДО КРИТИЧНОЇ ТОЧКИ. ВИМКНІТЬ УСЕ І ВІДПОЧИВАЙТЕ."
+        }
     }
 
     def __init__(self):
@@ -46,7 +57,14 @@ class PotyjNomer(loader.Module):
 
     @loader.command(ru_doc="Показати рівень потужності")
     async def ptjcmd(self, message):
+        colors = ["⬜️", "🟩", "🟨", "🟧", "🟫", "🟦", "🟪", "⬛️", "☠️"]
+        color = random.choice(colors)
+        color_message = self.strings["messages"][color]
         dots_count = random.randint(0, 40)
         dots = "." * dots_count
-        power_message = self.strings["power_level"].format(dots=dots)
+        power_message = self.strings["power_level"].format(
+            color=color,
+            dots=dots,
+            message=color_message
+        )
         await message.edit(power_message)
