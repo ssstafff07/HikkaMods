@@ -1,5 +1,6 @@
 import os
 import random
+from pathlib import Path
 from .. import loader, utils
 from pytube import YouTube
 from TikTokApi import TikTokApi
@@ -17,6 +18,8 @@ class VideoLoader(loader.Module):
 
     def __init__(self):
         self.name = self.strings["name"]
+        self.downloads_dir = Path("downloads")
+        self.downloads_dir.mkdir(exist_ok=True)
 
     @loader.command(ru_doc="Скачать видео с YouTube")
     async def ydcmd(self, message):
@@ -50,7 +53,7 @@ class VideoLoader(loader.Module):
                 await message.edit("❌ Не удалось найти подходящий поток для скачивания.")
                 return
 
-            output_path = video.download(output_path="downloads")
+            output_path = video.download(output_path=str(self.downloads_dir))
             await message.edit(self.strings["youtube_downloaded"].format(output_path))
         except Exception as e:
             await message.edit(self.strings["error"])
@@ -62,7 +65,7 @@ class VideoLoader(loader.Module):
             video = api.video(url=url)
             video_bytes = video.bytes()
 
-            output_path = os.path.join("downloads", f"tiktok_video_{random.randint(1, 1000)}.mp4")
+            output_path = self.downloads_dir / f"tiktok_video_{random.randint(1, 1000)}.mp4"
             with open(output_path, "wb") as f:
                 f.write(video_bytes)
 
