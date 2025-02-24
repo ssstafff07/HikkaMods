@@ -25,7 +25,6 @@
 #⠄⠄⠄⣿⠄⠄⣿⣿⠄⠄⠄⠄⠄⠄⠄⠄⣿⣿⠄⠄⠄⠄⣿
 #⠄⠄⣿⣿⣿⣿⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⣿⣿⣿⣿⣿⣿⣿⣿
 
-
 import speedtest
 from .. import loader, utils
 
@@ -53,24 +52,24 @@ class SpeedTestModule(loader.Module):
         """Проверяет скорость интернета, пинг и скорость скачивания."""
         await message.edit(self.strings["testing"])
 
-       
-        st = speedtest.Speedtest()
+        try:
+            st = speedtest.Speedtest()
+            st.get_best_server()
 
-        
-        st.get_best_server()
+            download_speed = st.download() / 1_000_000  # Переводим в Mbps
+            upload_speed = st.upload() / 1_000_000  # Переводим в Mbps
+            ping = st.results.ping
+            server = st.results.server["sponsor"]
+            location = f"{st.results.server['name']}, {st.results.server['country']}"
 
-        download_speed = st.download() / 1_000_000  # Переводим в Mbps
-        upload_speed = st.upload() / 1_000_000  # Переводим в Mbps
-        ping = st.results.ping  
-        server = st.results.server["sponsor"]
-        location = f"{st.results.server['name']}, {st.results.server['
-        result_message = self.strings["result"].format(
-            download=round(download_speed, 2),
-            upload=round(upload_speed, 2),
-            ping=round(ping, 2),
-            server=server,
-            location=location
-        )
+            result_message = self.strings["result"].format(
+                download=round(download_speed, 2),
+                upload=round(upload_speed, 2),
+                ping=round(ping, 2),
+                server=server,
+                location=location
+            )
 
-        
-        await message.edit(result_message)
+            await message.edit(result_message)
+        except Exception as e:
+            await message.edit(f"❌ Произошла ошибка: {e}")
