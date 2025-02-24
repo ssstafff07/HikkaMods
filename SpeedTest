@@ -30,7 +30,6 @@ from .. import loader, utils
 
 @loader.tds
 class SpeedTestModule(loader.Module):
-    """Модуль для проверки скорости интернета, пинга и скорости скачивания."""
     strings = {
         "name": "SpeedTest",
         "testing": "⏳ Проверяем скорость интернета...",
@@ -49,15 +48,14 @@ class SpeedTestModule(loader.Module):
 
     @loader.command(ru_doc="Проверить скорость интернета")
     async def speedtestcmd(self, message):
-        """Проверяет скорость интернета, пинг и скорость скачивания."""
         await message.edit(self.strings["testing"])
 
         try:
             st = speedtest.Speedtest()
             st.get_best_server()
 
-            download_speed = st.download() / 1_000_000  # Переводим в Mbps
-            upload_speed = st.upload() / 1_000_000  # Переводим в Mbps
+            download_speed = st.download() / 1_000_000
+            upload_speed = st.upload() / 1_000_000
             ping = st.results.ping
             server = st.results.server["sponsor"]
             location = f"{st.results.server['name']}, {st.results.server['country']}"
