@@ -46,6 +46,11 @@ class SpeedTestModule(loader.Module):
     def __init__(self):
         self.name = self.strings["name"]
 
+    async def client_ready(self, client, db):
+        self._client = client
+
+    requirements = ["speedtest-cli"]  # Указываем зависимости для установки
+
     @loader.command(ru_doc="Проверить скорость интернета")
     async def speedtestcmd(self, message):
         await message.edit(self.strings["testing"])
