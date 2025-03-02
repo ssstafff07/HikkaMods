@@ -25,79 +25,99 @@
 #⠄⠄⠄⣿⠄⠄⣿⣿⠄⠄⠄⠄⠄⠄⠄⠄⣿⣿⠄⠄⠄⠄⣿
 #⠄⠄⣿⣿⣿⣿⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⣿⣿⣿⣿⣿⣿⣿⣿
 
-
-import os
-import random
-from pathlib import Path
-from .. import loader, utils
+from asyncio import sleep
 from pytube import YouTube
-from TikTokApi import TikTokApi
+from .. import loader, utils
+import os
 
-@loader.tds
-class VideoLoader(loader.Module):
+
+class TikDownBotMod(loader.Module):
     strings = {
-        "name": "VideoLoader",
-        "youtube_downloaded": "🎥 Видео с YouTube успешно скачано: {}",
-        "tiktok_downloaded": "🎥 Видео с TikTok успешно скачано: {}",
-        "error": "❌ Произошла ошибка при скачивании видео.",
-        "invalid_url": "❌ Некорректная ссылка. Пожалуйста, укажите ссылку на видео с YouTube или TikTok.",
-        "no_url": "❌ Укажите ссылку на видео."
+        "name": "🎥 TikTok & YouTube Downloader",
+        "wilson_pls_wait": "⏳ <b>Пожалуйста, подождите...</b>",
+        "wilson_pls_enter_a_link": "🔗 <b>Пожалуйста, предоставьте ссылку на видео</b>",
+        "wilson_done": "✅ <b>Готово!</b>",
+        "wilson_yt_error": "❌ <b>Ошибка при загрузке видео с YouTube</b>",
+        "wilson_tiktok_error": "❌ <b>Ошибка при загрузке видео с TikTok</b>",
+        "wilson_no_video_found": "❌ <b>Видео по указанной ссылке не найдено</b>",
     }
 
-    def __init__(self):
-        self.name = self.strings["name"]
-        self.downloads_dir = Path("downloads")
-        self.downloads_dir.mkdir(exist_ok=True)
+    strings_ru = strings
+    strings_uz = {
+        "wilson_pls_wait": "⏳ <b>Iltimos, kuting...</b>",
+        "wilson_pls_enter_a_link": "🔗 <b>Iltimos, video uchun havolani ko'rsating</b>",
+        "wilson_done": "✅ <b>Tayyor!</b>",
+        "wilson_yt_error": "❌ <b>YouTube videosini yuklashda xatolik</b>",
+        "wilson_tiktok_error": "❌ <b>TikTok videosini yuklashda xatolik</b>",
+        "wilson_no_video_found": "❌ <b>Berilgan havola bo'yicha video topilmadi</b>",
+    }
 
-    @loader.command(ru_doc="Скачать видео с YouTube")
-    async def ydcmd(self, message):
-        args = utils.get_args_raw(message)
-        if not args:
-            await message.edit(self.strings["no_url"])
-            return
+    TEMP_DOWNLOAD_PATH = "downloads"
 
-        if "youtube.com" in args or "youtu.be" in args:
-            await self.download_youtube_video(message, args)
-        else:
-            await message.edit(self.strings["invalid_url"])
+    async def _send_message(self, message, text):
+        await utils.answer(message, text)
 
-    @loader.command(ru_doc="Скачать видео с TikTok")
-    async def tdcmd(self, message):
-        args = utils.get_args_raw(message)
-        if not args:
-            await message.edit(self.strings["no_url"])
-            return
+    async def _download_tiktok_video(self, url):
+        try:
+            r = await self.client.inline_query("tikdobot", url)
+            if not r or len(r) < 2:
+                return None
+            return r[1].result.content.url
+        except Exception as e:
+            raise Exception(f"TikTok download error: {e}")
 
-        if "tiktok.com" in args:
-            await self.download_tiktok_video(message, args)
-        else:
-            await message.edit(self.strings["invalid_url"])
-
-    async def download_youtube_video(self, message, url):
+    async def _download_youtube_video(self, url):
         try:
             yt = YouTube(url)
             video = yt.streams.filter(progressive=True, file_extension='mp4').first()
             if not video:
-                await message.edit("❌ Не удалось найти подходящий поток для скачивания.")
-                return
-
-            output_path = video.download(output_path=str(self.downloads_dir))
-            await message.edit(self.strings["youtube_downloaded"].format(output_path))
+                return None
+            os.makedirs(self.TEMP_DOWNLOAD_PATH, exist_ok=True)
+            file_path = video.download(output_path=self.TEMP_DOWNLOAD_PATH)
+            return file_path
         except Exception as e:
-            await message.edit(self.strings["error"])
-            print(f"Ошибка при скачивании видео с YouTube: {e}")
+            raise Exception(f"YouTube download error: {e}")
 
-    async def download_tiktok_video(self, message, url):
+    async def _send_video(self, message, file_path, url, reply_to=None):
+        await self.client.send_file(
+            message.to_id,
+            file_path,
+            caption=f"{self.strings('wilson_done')} | <code>{url}</code>",
+            reply_to=reply_to,
+        )
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+    async def tdcmd(self, message):
+        reply = await message.get_reply_message()
+        await self._send_message(message, self.strings("wilson_pls_wait", message))
+        args = utils.get_args_raw(message)
+        if not args:
+            await self._send_message(message, self.strings("wilson_pls_enter_a_link", message))
+            return
         try:
-            api = TikTokApi()
-            video = api.video(url=url)
-            video_bytes = video.bytes()
-
-            output_path = self.downloads_dir / f"tiktok_video_{random.randint(1, 1000)}.mp4"
-            with open(output_path, "wb") as f:
-                f.write(video_bytes)
-
-            await message.edit(self.strings["tiktok_downloaded"].format(output_path))
+            video_url = await self._download_tiktok_video(args)
+            if not video_url:
+                await self._send_message(message, self.strings("wilson_no_video_found", message))
+                return
+            await self._send_video(message, video_url, args, reply_to=reply.id if reply else None)
         except Exception as e:
-            await message.edit(self.strings["error"])
-            print(f"Ошибка при скачивании видео с TikTok: {e}")
+            await self._send_message(message, f"{self.strings('wilson_tiktok_error', message)}: {e}")
+        await message.delete()
+
+    async def ytcmd(self, message):
+        reply = await message.get_reply_message()
+        await self._send_message(message, self.strings("wilson_pls_wait", message))
+        args = utils.get_args_raw(message)
+        if not args:
+            await self._send_message(message, self.strings("wilson_pls_enter_a_link", message))
+            return
+        try:
+            file_path = await self._download_youtube_video(args)
+            if not file_path:
+                await self._send_message(message, self.strings("wilson_no_video_found", message))
+                return
+            await self._send_video(message, file_path, args, reply_to=reply.id if reply else None)
+        except Exception as e:
+            await self._send_message(message, f"{self.strings('wilson_yt_error', message)}: {e}")
+        await message.delete()
